@@ -29,7 +29,9 @@ data class DungeonRoom(val tile: Tile, val isCritical: Boolean) {
 
     fun open(player: Player, dungeon: DungeonMap) {
         val zone = zone ?: return
-        val origin = player.instance()?.tile?.zone ?: return
+        // Same base the door lookup reverses against (DungeonDoors.openDoor): the dungeon's own
+        // region, falling back to the player's instance marker only if it is somehow unset.
+        val origin = (dungeon.region.takeIf { it != Region.EMPTY } ?: player.instance())?.tile?.zone ?: return
         if (open) {
             return
         }

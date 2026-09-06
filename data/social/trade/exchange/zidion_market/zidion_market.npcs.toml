@@ -1,0 +1,11 @@
+# The Zidion market clerk - the fourth desk clerk, re-purposed.
+#
+# The 634 cache has exactly four "Grand Exchange clerk" npcs (6528-6531) and the shipped data
+# claims them all, so the market clerk takes over 6531: the shipped [grand_exchange_clerk_blonde]
+# section and its spawn line were removed from grand_exchange.npcs.toml / .npc-spawns.toml and
+# live here instead. The string id deliberately does NOT start with `grand_exchange_clerk`, so
+# the shipped clerk dialogue (npcApproach "grand_exchange_clerk*") never fires for her; the
+# Exchange / History / Sets options are re-registered by content/zidion/ZidionMarket.kt.
+[zidion_market_clerk]
+id = 6531
+examine = "She runs the Zidion market desk. Knows every price on the board."

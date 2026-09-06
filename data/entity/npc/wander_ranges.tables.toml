@@ -15915,6 +15915,23 @@ wander_range = 0
 wander_range = 0
 max_range = 34464
 
+# Zidion market clerk (the re-purposed fourth desk clerk, data/social/trade/exchange/zidion_market/).
+[.zidion_market_clerk]
+wander_range = 0
+max_range = 34464
+
+# Zidion white knights: sent to killings from beyond render distance, so the combat leash
+# (max_range, measured from the spawn tile) must reach the whole spawn ring and then some.
+[.zidion_knight]
+wander_range = 3
+max_range = 64
+[.zidion_knight_2]
+wander_range = 3
+max_range = 64
+[.zidion_knight_3]
+wander_range = 3
+max_range = 64
+
 [.grand_exchange_clerk_short]
 wander_range = 0
 max_range = 34464

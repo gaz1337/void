@@ -1,0 +1,388 @@
+# Zidion PvP bot behaviour - what the PvP bots say and every number that governs them.
+#
+# The PvP bots are player bots (see data/bot/zidion_pvp_bot.templates.toml for their kit and
+# data/bot/zidion_pvp_bot.bots.toml for the activity). This file is read by
+# content/zidion/ZidionPvpBots.kt, which only holds the parts a bot template cannot express:
+# sizing a victim up, demanding a drop, deciding to betray, and paying the knights.
+#
+# Same Data-Tables shape as zidion_knight.tables.toml: header block declares column types, rows
+# are added with the `.` prefix. Every list is free to grow or shrink - the script picks at
+# random and never assumes a length.
+
+[zidion_pvp_bot_lines]
+row_id = "string"
+lines = "list<string>"
+
+# What the bots say. They are meant to read like real pkers: short, lower case, cocky, and never
+# the same line twice in a row (the script remembers the last one). `$name` is the other player.
+# Throttled by taunt_cooldown_ticks so a long fight is not a wall of text.
+[.slur]
+lines = [
+    "sit",
+    "sit $name",
+    "sit noob",
+    "ez",
+    "l2pk $name",
+    "u got rushed lol",
+    "1 item nerd",
+    "come at me",
+    "safer",
+    "ur bad lol",
+    "get owned",
+    "gg ez",
+    "lol run",
+    "u cant even eat",
+    "free",
+    "noob",
+    "ur getting spec'd",
+    "sit down",
+    "gf",
+    "lol $name",
+    "wheres ur friends $name",
+    "brew up noob",
+    "no food? lol",
+    "pray melee noob",
+    "log out",
+    "nice gear where u buy it",
+    "u pk with that? lol",
+    "ill take that whip ty",
+    "1v1 me",
+    "stop running",
+    "eat noob",
+    "ur done",
+    "omw",
+    "ez pz",
+    "welcome to zidion",
+    "nh lol",
+    "rushed",
+]
+
+# Verdict: the victim carries something and the coin flip came up "rob". A grace period starts.
+[.demand]
+lines = [
+    "drop ur stuff and u live",
+    "drop or die $name",
+    "everything on the floor. now",
+    "drop it noob or ur dead",
+    "inv on floor now",
+    "pay up or get owned",
+    "drop ur bank and walk",
+    "$name drop it all. u have 10 seconds",
+    "nice gear. drop it",
+    "empty ur inv and go",
+    "give me ur stuff and i wont spec u",
+    "ur choice noob. drop or sit",
+]
+
+# Verdict: not worth the bother. The bot walks off.
+[.dismiss]
+lines = [
+    "u got nothing peasant lol",
+    "poor peasant",
+    "lol u have nothing",
+    "not even worth it",
+    "go get some gear lol",
+    "1 item noob bye",
+    "lol whats that gear",
+    "$name ur too poor to rob",
+    "come back with a bank",
+    "waste of my time",
+    "lol nice bronze",
+    "go skill noob",
+    "peasant",
+]
+
+# The grace period ended and a pile was on the floor.
+[.after_drop]
+lines = [
+    "ty for the free stuff lol",
+    "smart noob",
+    "ez money",
+    "gf",
+    "ty",
+    "lol thx",
+    "pleasure doing business $name",
+    "good boy",
+    "ty $name lol",
+    "thats what i thought",
+]
+
+# The grace period ended and nothing worth having was on the floor.
+[.refused]
+lines = [
+    "ok ur dead",
+    "wrong choice noob",
+    "u had ur chance",
+    "lol ok",
+    "fine",
+    "$name u shouldve dropped",
+    "ur funeral",
+    "too slow",
+]
+
+# The victim swung first while the bot was still waiting.
+[.wrong_answer]
+lines = [
+    "lol u actually hit me",
+    "ok ur dead now",
+    "big mistake",
+    "u want it that way? ok",
+    "lmao ok",
+    "$name u hit me? lol",
+    "brave noob",
+    "ok ok lets go then",
+]
+
+# The bot took the pile and decided to finish the job anyway.
+[.betray]
+lines = [
+    "lol did u think id let u go",
+    "thx for the loot, now sit",
+    "changed my mind noob",
+    "gf",
+    "lol",
+    "sorry $name business is business",
+    "no witnesses",
+    "u really thought lol",
+]
+
+# The victim went down.
+[.kill]
+lines = [
+    "sit",
+    "gf",
+    "ez",
+    "owned",
+    "sit noob",
+    "l2pk",
+    "gg no re",
+    "rushed lol",
+    "ty for loot",
+    "another one",
+    "lol sit",
+    "sit $name",
+    "gf $name",
+    "ez $name",
+    "told u",
+    "gg",
+    "safer lol",
+    "dont come back",
+    "free loot ty",
+    "thats a sit",
+    "next",
+]
+
+# The knight let it live. Said in the cutscene before it walks off.
+[.forgiven]
+lines = [
+    "ty boss",
+    "wont happen again boss",
+    "love u boss",
+    "ok ok im going",
+    "lol thanks",
+    "my bad boss",
+    "ur the best boss",
+    "phew",
+]
+
+# Loot in hand but no knight within tribute_zones to hand it to.
+[.no_boss]
+lines = [
+    "where the knights at",
+    "boss?",
+    "ill hold this then",
+    "no1 to pay lol",
+    "boss where r u",
+    "guess its mine then",
+]
+
+# Idle chatter inside a safe zone, where the activity is paused and the bot is off duty.
+[.loiter]
+lines = [
+    "safe zone lol",
+    "cant pk in here",
+    "anyone got food",
+    "back to the wild soon",
+    "afk",
+    "sell brews",
+    "who wants to pk",
+    "ge later",
+    "so bored",
+    "buying sharks",
+    "anyone selling claws",
+    "lol this place",
+    "brb",
+    "anyone want to team",
+    "prices are crazy today",
+    "knights everywhere lol",
+]
+
+[zidion_pvp_bot_rules]
+row_id = "string"
+value = "int"
+
+# Percent chance the PvP bot decides a victim is worth killing outright rather than robbing.
+# The "50/50 worth a kill" call.
+[.appraisal_percent]
+value = 50
+
+# Total shop value (inventory + worn) below which a victim is dismissed as not worth the effort.
+[.min_worth]
+value = 1000
+
+# Ticks the victim has to drop items after a demand (25 ticks = 15s).
+[.demand_grace_ticks]
+value = 25
+
+# Total shop value that must be on the floor near the victim for a drop to count as paying.
+[.drop_min_value]
+value = 500
+
+# Percent chance the PvP bot attacks anyway after collecting a drop.
+[.attack_after_drop_percent]
+value = 30
+
+# Ticks a "worth killing" verdict stays valid for the same victim, so the PvP bot keeps
+# swinging rather than re-rolling every hit.
+[.ok_ticks]
+value = 100
+
+# Ticks a dismissed victim is left alone while the PvP bot walks off.
+[.spare_ticks]
+value = 40
+
+# Ticks the PvP bot remembers having already let a victim go, so it does not re-run the whole
+# routine on them every time they cross its path.
+[.spared_ticks]
+value = 250
+
+# Tiles the PvP bot walks away after sparing someone. Must exceed the fight action's scan
+# radius (12 in the template) or it just turns around and re-targets them.
+[.walk_away_tiles]
+value = 16
+
+# Ticks spent picking up loot after a kill or a drop before moving on.
+[.loot_ticks]
+value = 25
+
+# Ticks between loot pickups while collecting.
+[.loot_step_ticks]
+value = 2
+
+# Radius, in tiles, searched for loot around the pile.
+[.loot_radius]
+value = 6
+
+# Cheapest single item (shop value x amount) a PvP bot bothers bending down for. Keeps bones and
+# other junk out of an inventory that only has a handful of free slots.
+[.loot_min_item_value]
+value = 50
+
+# Ticks a kill's drops take to land after the victim hits zero (the death animation is 5 ticks,
+# then the pile appears). Looting starts after this so the first sweep is not over an empty tile.
+[.kill_drop_delay_ticks]
+value = 7
+
+# Radius, in zones (8 tiles each), searched for a white knight to hand loot to.
+[.tribute_zones]
+value = 4
+
+# Ticks allowed for the walk to the knight before the PvP bot gives up and goes back to work.
+[.tribute_timeout_ticks]
+value = 60
+
+# Minimum ticks between two taunts from the same PvP bot.
+[.taunt_cooldown_ticks]
+value = 20
+
+# Ticks between idle wander steps inside a safe zone.
+[.loiter_step_ticks]
+value = 8
+
+# Radius of each idle wander step.
+[.loiter_radius]
+value = 5
+
+# Percent chance an idle step is accompanied by a line of chatter.
+[.loiter_chat_percent]
+value = 10
+
+# Idle steps taken in a safe zone before the PvP bot heads back out to the roads.
+[.loiter_steps]
+value = 12
+
+# Tiles walked when leaving a safe zone. Larger than the zone half-width so the walk ends
+# outside it.
+[.loiter_leave_tiles]
+value = 30
+
+# Combat levels the bot is set to on spawn and respawn (constitution is stored x10 internally).
+[.combat_level]
+value = 99
+[.prayer_level]
+value = 95
+
+# A fresh bot holds off its first fight for a random number of ticks in this range, so a group
+# arrives over half a minute instead of all at once.
+[.spawn_hold_min_ticks]
+value = 5
+[.spawn_hold_max_ticks]
+value = 50
+
+# Ticks after death before the bot is logged out for good (the death sequence itself takes 5).
+# A replacement is spawned from nothing by the next maintenance pass.
+[.dispose_delay_ticks]
+value = 8
+
+# An idle bot further than this from the nearest real player walks in to a tile beside them,
+# inside the fight action's scan radius (12), so it finds them on its own.
+[.approach_radius]
+value = 8
+
+# Most bots (and most escort knights) one maintenance pass may add around one player.
+[.spawns_per_pass]
+value = 2
+
+# Tries at finding a hidden, walkable, non-safe-zone spawn tile before giving up this pass.
+[.spawn_tile_attempts]
+value = 24
+
+# Tries at finding a tile to walk away to / out of a safe zone.
+[.walk_tile_attempts]
+value = 8
+
+# Ticks the hold clock outlives the demand verdict by, so the two can never race.
+[.hold_margin_ticks]
+value = 3
+
+# A dead bot's takings: ticks only the killer can see them, and ticks until they vanish.
+# 180 is the window the engine gives a killer over a pvp drop before it goes public.
+[.drop_private_ticks]
+value = 180
+[.drop_ticks]
+value = 240
+
+# ---------------------------------------------------------------------------------------------
+# Escort knights: one of these npcs walks with each group, and one is summoned to a killing.
+# ---------------------------------------------------------------------------------------------
+[zidion_pvp_bot_escorts]
+row_id = "npc"
+
+[.zidion_knight]
+[.zidion_knight_2]
+[.zidion_knight_3]
+
+# ---------------------------------------------------------------------------------------------
+# Loadouts: which activity (data/bot/zidion_pvp_bot.bots.toml) a spawned bot is pinned to, drawn
+# by weight. Add a row here and a template + activity there to add a fourth.
+# ---------------------------------------------------------------------------------------------
+[zidion_pvp_bot_loadouts]
+row_id = "string"
+weight = "int"
+
+[.zidion_pvp_bot_melee]
+weight = 40
+[.zidion_pvp_bot_ranged]
+weight = 30
+[.zidion_pvp_bot_mage]
+weight = 30

@@ -1,5 +1,6 @@
 package content.skill.dungeoneering
 
+import com.github.michaelbull.logging.InlineLogger
 import content.entity.player.dialogue.type.statement
 import content.quest.instance
 import world.gregs.voidps.engine.Script
@@ -18,6 +19,7 @@ import world.gregs.voidps.engine.entity.obj.replace
 import world.gregs.voidps.engine.inv.inventory
 import world.gregs.voidps.engine.inv.remove
 import world.gregs.voidps.type.Delta
+import world.gregs.voidps.type.Region
 import world.gregs.voidps.type.Direction
 import world.gregs.voidps.type.Tile
 
@@ -32,8 +34,8 @@ class DungeonDoors : Script {
 
         objectOperate("Unlock", "orange_*_door,silver_*_door,yellow_*_door,green_*_door,blue_*_door,purple_*_door,crimson_*_door,gold_*_door") { (target) ->
             val dungeon = dungeonMap ?: return@objectOperate
-            val instance = instance() ?: return@objectOperate
-            val origin = tile.delta(instance.tile)
+            val base = dungeon.region.takeIf { it != Region.EMPTY } ?: instance() ?: return@objectOperate
+            val origin = tile.delta(base.tile)
             val roomTile = origin.room
             val room = dungeon.room(roomTile.x, roomTile.y) ?: return@objectOperate
             val door = room.doors[target.rotation] ?: return@objectOperate
@@ -196,11 +198,23 @@ class DungeonDoors : Script {
 
     private suspend fun Player.openDoor(target: GameObject) {
         val dungeon = dungeonMap ?: return
-        val instance = instance() ?: return
-        val origin = target.tile.delta(instance.tile)
+        // The room grid was rendered against the dungeon's own region (DungeonRoom.open uses the
+        // same base). Resolve the door back through that region, not the player's instance marker:
+        // a reused or stale instance id points at a different region and sends this lookup off the
+        // grid, which is what threw the ArrayIndexOutOfBoundsException on a door press.
+        val base = dungeon.region.takeIf { it != Region.EMPTY } ?: instance() ?: return
+        val origin = target.tile.delta(base.tile)
         val roomTile = origin.room
         val direction = direction(target) ?: return
-        val room = dungeon.room(roomTile.x, roomTile.y) ?: return
+        val room = dungeon.room(roomTile.x, roomTile.y)
+        if (room == null) {
+            logger.warn {
+                "Dungeon door ${target.id} at ${target.tile} resolved to off-grid room " +
+                    "(${roomTile.x}, ${roomTile.y}) in a ${dungeon.width}x${dungeon.height} grid " +
+                    "(base ${base.tile}). Door ignored instead of crashing."
+            }
+            return
+        }
         val adj = room.adjacentRooms[target.rotation] ?: return
         if (!adj.open) {
             adj.open(this, dungeon)
@@ -222,5 +236,9 @@ class DungeonDoors : Script {
         2 -> Direction.EAST
         3 -> Direction.SOUTH
         else -> null
+    }
+
+    private companion object {
+        private val logger = InlineLogger()
     }
 }

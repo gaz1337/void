@@ -1,0 +1,1313 @@
+# Zidion market - the simulated commodity exchange.
+#
+# Read by content/zidion/ZidionMarket.kt (prices, campaigns, prints, the clerk desk, tax) and
+# ZidionTradingBots.kt (the trading bots and the order book). Everything tunable lives here; the
+# scripts hold no gameplay numbers and no player-facing text.
+#
+# How the pieces fit:
+#  - zidion_market_items     the commodities. Row ids are item ids and are validated at load.
+#                            Their live price IS the item's `price` param, so the exchange screens,
+#                            the price checker and item values all move with the market.
+#  - zidion_market_campaigns manipulation plays. One is running most of the time; it drags the
+#                            price of one commodity towards a target and multiplies its volume.
+#  - zidion_market_traders   the trading bots standing in the exchange. They quote real bids and
+#                            asks into the order book, take player offers, run the campaigns and
+#                            gossip about them. Their coins and stock are the treasury account's.
+#  - zidion_market_rules     every dial.
+#  - zidion_market_lines     what the traders say when nothing in particular is going on.
+
+# ---------------------------------------------------------------------------------------------
+# Commodities
+#
+#   sector      grouping for the report
+#   volatility  typical daily swing, percent
+#   volume      typical items traded per hour when nothing is going on (synthetic prints)
+#   lot         a normal trade size; quotes are lot * quote_lots
+# ---------------------------------------------------------------------------------------------
+[zidion_market_items]
+row_id = "item"
+sector = "string"
+volatility = "int"
+volatility_default = 6
+volume = "int"
+volume_default = 300
+lot = "int"
+lot_default = 10
+
+# --- ores ---
+[.copper_ore]
+sector = "ores"
+volume = 900
+lot = 50
+[.tin_ore]
+sector = "ores"
+volume = 900
+lot = 50
+[.iron_ore]
+sector = "ores"
+volume = 1500
+lot = 100
+[.coal]
+sector = "ores"
+volatility = 5
+volume = 2500
+lot = 100
+[.mithril_ore]
+sector = "ores"
+volume = 700
+lot = 50
+[.adamantite_ore]
+sector = "ores"
+volume = 600
+lot = 25
+[.runite_ore]
+sector = "ores"
+volatility = 9
+volume = 250
+lot = 10
+[.gold_ore]
+sector = "ores"
+volume = 800
+lot = 50
+[.silver_ore]
+sector = "ores"
+volume = 400
+lot = 50
+
+# --- bars ---
+[.bronze_bar]
+sector = "bars"
+volume = 400
+lot = 50
+[.iron_bar]
+sector = "bars"
+volume = 700
+lot = 50
+[.steel_bar]
+sector = "bars"
+volume = 1200
+lot = 50
+[.mithril_bar]
+sector = "bars"
+volume = 500
+lot = 25
+[.adamant_bar]
+sector = "bars"
+volume = 400
+lot = 25
+[.rune_bar]
+sector = "bars"
+volatility = 8
+volume = 200
+lot = 10
+[.gold_bar]
+sector = "bars"
+volume = 600
+lot = 50
+
+# --- logs ---
+[.logs]
+sector = "logs"
+volume = 800
+lot = 100
+[.oak_logs]
+sector = "logs"
+volume = 900
+lot = 100
+[.willow_logs]
+sector = "logs"
+volume = 1600
+lot = 100
+[.maple_logs]
+sector = "logs"
+volume = 1400
+lot = 100
+[.yew_logs]
+sector = "logs"
+volatility = 7
+volume = 1200
+lot = 50
+[.magic_logs]
+sector = "logs"
+volatility = 8
+volume = 500
+lot = 25
+
+# --- runes ---
+[.air_rune]
+sector = "runes"
+volatility = 4
+volume = 6000
+lot = 500
+[.water_rune]
+sector = "runes"
+volatility = 4
+volume = 4000
+lot = 500
+[.earth_rune]
+sector = "runes"
+volatility = 4
+volume = 4000
+lot = 500
+[.fire_rune]
+sector = "runes"
+volatility = 4
+volume = 5000
+lot = 500
+[.mind_rune]
+sector = "runes"
+volatility = 4
+volume = 3000
+lot = 500
+[.body_rune]
+sector = "runes"
+volume = 1500
+lot = 500
+[.chaos_rune]
+sector = "runes"
+volume = 3000
+lot = 200
+[.death_rune]
+sector = "runes"
+volatility = 7
+volume = 2500
+lot = 200
+[.blood_rune]
+sector = "runes"
+volatility = 8
+volume = 1500
+lot = 100
+[.nature_rune]
+sector = "runes"
+volatility = 7
+volume = 3500
+lot = 200
+[.law_rune]
+sector = "runes"
+volatility = 7
+volume = 2500
+lot = 100
+[.cosmic_rune]
+sector = "runes"
+volume = 1200
+lot = 100
+[.soul_rune]
+sector = "runes"
+volatility = 9
+volume = 600
+lot = 50
+[.astral_rune]
+sector = "runes"
+volume = 1000
+lot = 100
+[.pure_essence]
+sector = "runes"
+volatility = 5
+volume = 8000
+lot = 1000
+[.rune_essence]
+sector = "runes"
+volatility = 5
+volume = 2000
+lot = 500
+
+# --- herbs and seeds ---
+[.grimy_guam]
+sector = "herbs"
+volume = 600
+lot = 50
+[.grimy_ranarr]
+sector = "herbs"
+volatility = 8
+volume = 900
+lot = 25
+[.grimy_toadflax]
+sector = "herbs"
+volume = 500
+lot = 25
+[.grimy_irit]
+sector = "herbs"
+volume = 500
+lot = 25
+[.grimy_avantoe]
+sector = "herbs"
+volume = 500
+lot = 25
+[.grimy_kwuarm]
+sector = "herbs"
+volume = 400
+lot = 25
+[.grimy_snapdragon]
+sector = "herbs"
+volatility = 9
+volume = 500
+lot = 25
+[.grimy_cadantine]
+sector = "herbs"
+volume = 400
+lot = 25
+[.grimy_lantadyme]
+sector = "herbs"
+volume = 400
+lot = 25
+[.grimy_dwarf_weed]
+sector = "herbs"
+volume = 400
+lot = 25
+[.grimy_torstol]
+sector = "herbs"
+volatility = 10
+volume = 250
+lot = 10
+[.clean_guam]
+sector = "herbs"
+volume = 300
+lot = 50
+[.clean_ranarr]
+sector = "herbs"
+volatility = 8
+volume = 600
+lot = 25
+[.clean_snapdragon]
+sector = "herbs"
+volatility = 9
+volume = 400
+lot = 25
+[.clean_torstol]
+sector = "herbs"
+volatility = 10
+volume = 200
+lot = 10
+[.ranarr_seed]
+sector = "seeds"
+volatility = 10
+volume = 150
+lot = 5
+[.snapdragon_seed]
+sector = "seeds"
+volatility = 11
+volume = 100
+lot = 5
+[.torstol_seed]
+sector = "seeds"
+volatility = 12
+volume = 60
+lot = 2
+
+# --- potions ---
+[.super_attack_4]
+sector = "potions"
+volume = 500
+lot = 25
+[.super_strength_4]
+sector = "potions"
+volume = 600
+lot = 25
+[.super_defence_4]
+sector = "potions"
+volume = 400
+lot = 25
+[.prayer_potion_4]
+sector = "potions"
+volatility = 7
+volume = 1200
+lot = 50
+[.saradomin_brew_4]
+sector = "potions"
+volatility = 8
+volume = 900
+lot = 50
+[.super_restore_4]
+sector = "potions"
+volatility = 8
+volume = 1000
+lot = 50
+[.antifire_4]
+sector = "potions"
+volume = 400
+lot = 25
+[.super_antifire_4]
+sector = "potions"
+volatility = 8
+volume = 200
+lot = 10
+[.overload_4]
+sector = "potions"
+volatility = 12
+volume = 120
+lot = 5
+[.extreme_attack_4]
+sector = "potions"
+volatility = 10
+volume = 150
+lot = 10
+
+# --- food ---
+[.lobster]
+sector = "food"
+volume = 2000
+lot = 100
+[.swordfish]
+sector = "food"
+volume = 1500
+lot = 100
+[.monkfish]
+sector = "food"
+volume = 1800
+lot = 100
+[.shark]
+sector = "food"
+volatility = 7
+volume = 2500
+lot = 100
+[.rocktail]
+sector = "food"
+volatility = 9
+volume = 1200
+lot = 50
+[.raw_lobster]
+sector = "food"
+volume = 1200
+lot = 100
+[.raw_swordfish]
+sector = "food"
+volume = 900
+lot = 100
+[.raw_monkfish]
+sector = "food"
+volume = 1200
+lot = 100
+[.raw_shark]
+sector = "food"
+volatility = 7
+volume = 1500
+lot = 100
+[.raw_rocktail]
+sector = "food"
+volatility = 9
+volume = 700
+lot = 50
+
+# --- bones ---
+[.bones]
+sector = "bones"
+volume = 1500
+lot = 100
+[.big_bones]
+sector = "bones"
+volume = 1200
+lot = 100
+[.dragon_bones]
+sector = "bones"
+volatility = 8
+volume = 1000
+lot = 50
+[.frost_dragon_bones]
+sector = "bones"
+volatility = 10
+volume = 500
+lot = 25
+[.ourg_bones]
+sector = "bones"
+volatility = 12
+volume = 40
+lot = 2
+
+# --- hides and leather ---
+[.green_dragonhide]
+sector = "hides"
+volume = 1500
+lot = 100
+[.blue_dragonhide]
+sector = "hides"
+volume = 700
+lot = 50
+[.red_dragonhide]
+sector = "hides"
+volume = 500
+lot = 50
+[.black_dragonhide]
+sector = "hides"
+volatility = 8
+volume = 600
+lot = 50
+[.green_dragon_leather]
+sector = "hides"
+volume = 600
+lot = 50
+[.black_dragon_leather]
+sector = "hides"
+volatility = 8
+volume = 300
+lot = 25
+
+# --- gems ---
+[.uncut_sapphire]
+sector = "gems"
+volume = 600
+lot = 25
+[.uncut_emerald]
+sector = "gems"
+volume = 500
+lot = 25
+[.uncut_ruby]
+sector = "gems"
+volume = 400
+lot = 25
+[.uncut_diamond]
+sector = "gems"
+volatility = 8
+volume = 350
+lot = 10
+[.uncut_dragonstone]
+sector = "gems"
+volatility = 10
+volume = 80
+lot = 2
+[.uncut_onyx]
+sector = "gems"
+volatility = 14
+volume = 6
+lot = 1
+[.dragonstone]
+sector = "gems"
+volatility = 10
+volume = 60
+lot = 2
+[.onyx]
+sector = "gems"
+volatility = 14
+volume = 5
+lot = 1
+
+# --- ammunition ---
+[.rune_arrow]
+sector = "ammo"
+volume = 3000
+lot = 500
+[.adamant_arrow]
+sector = "ammo"
+volume = 2500
+lot = 500
+[.broad_arrow]
+sector = "ammo"
+volume = 1500
+lot = 500
+[.dragon_arrow]
+sector = "ammo"
+volatility = 9
+volume = 400
+lot = 100
+[.runite_bolts]
+sector = "ammo"
+volume = 1500
+lot = 200
+[.dragon_bolts_e]
+sector = "ammo"
+volatility = 9
+volume = 500
+lot = 100
+[.cannonball]
+sector = "ammo"
+volatility = 5
+volume = 6000
+lot = 1000
+
+# --- weapons ---
+[.abyssal_whip]
+sector = "weapons"
+volatility = 8
+volume = 60
+lot = 1
+[.dragon_dagger_p]
+sector = "weapons"
+volume = 80
+lot = 1
+[.dragon_dagger]
+sector = "weapons"
+volume = 60
+lot = 1
+[.dragon_scimitar]
+sector = "weapons"
+volume = 70
+lot = 1
+[.dragon_2h_sword]
+sector = "weapons"
+volatility = 9
+volume = 20
+lot = 1
+[.dragon_pickaxe]
+sector = "weapons"
+volatility = 11
+volume = 15
+lot = 1
+[.dragon_claws]
+sector = "weapons"
+volatility = 12
+volume = 25
+lot = 1
+[.armadyl_godsword]
+sector = "weapons"
+volatility = 12
+volume = 10
+lot = 1
+[.bandos_godsword]
+sector = "weapons"
+volatility = 10
+volume = 15
+lot = 1
+[.saradomin_godsword]
+sector = "weapons"
+volatility = 11
+volume = 12
+lot = 1
+[.zamorak_godsword]
+sector = "weapons"
+volatility = 11
+volume = 12
+lot = 1
+[.saradomin_sword]
+sector = "weapons"
+volatility = 9
+volume = 25
+lot = 1
+[.godsword_shard_1]
+sector = "weapons"
+volatility = 11
+volume = 15
+lot = 1
+[.staff_of_light]
+sector = "weapons"
+volatility = 11
+volume = 15
+lot = 1
+[.ancient_staff]
+sector = "weapons"
+volume = 40
+lot = 1
+[.master_wand]
+sector = "weapons"
+volatility = 10
+volume = 12
+lot = 1
+[.chaotic_rapier]
+sector = "weapons"
+volatility = 13
+volume = 4
+lot = 1
+[.chaotic_maul]
+sector = "weapons"
+volatility = 13
+volume = 3
+lot = 1
+[.chaotic_longsword]
+sector = "weapons"
+volatility = 13
+volume = 3
+lot = 1
+
+# --- armour ---
+[.dragon_boots]
+sector = "armour"
+volatility = 8
+volume = 80
+lot = 1
+[.dragon_full_helm]
+sector = "armour"
+volatility = 12
+volume = 6
+lot = 1
+[.dragon_platelegs]
+sector = "armour"
+volume = 40
+lot = 1
+[.dragon_chainbody]
+sector = "armour"
+volatility = 10
+volume = 15
+lot = 1
+[.bandos_chestplate]
+sector = "armour"
+volatility = 11
+volume = 15
+lot = 1
+[.bandos_tassets]
+sector = "armour"
+volatility = 11
+volume = 15
+lot = 1
+[.bandos_boots]
+sector = "armour"
+volatility = 10
+volume = 20
+lot = 1
+[.armadyl_chestplate]
+sector = "armour"
+volatility = 12
+volume = 8
+lot = 1
+[.armadyl_chainskirt]
+sector = "armour"
+volatility = 12
+volume = 8
+lot = 1
+[.armadyl_helmet]
+sector = "armour"
+volatility = 12
+volume = 8
+lot = 1
+[.torva_full_helm]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.torva_platebody]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.torva_platelegs]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.pernix_cowl]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.pernix_body]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.pernix_chaps]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.virtus_mask]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.virtus_robe_top]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+[.virtus_robe_legs]
+sector = "armour"
+volatility = 14
+volume = 2
+lot = 1
+
+# --- barrows ---
+[.dharoks_greataxe]
+sector = "barrows"
+volatility = 9
+volume = 20
+lot = 1
+[.dharoks_platebody]
+sector = "barrows"
+volatility = 9
+volume = 20
+lot = 1
+[.dharoks_helm]
+sector = "barrows"
+volatility = 9
+volume = 20
+lot = 1
+[.veracs_flail]
+sector = "barrows"
+volatility = 9
+volume = 15
+lot = 1
+[.guthans_warspear]
+sector = "barrows"
+volatility = 9
+volume = 15
+lot = 1
+[.ahrims_staff]
+sector = "barrows"
+volatility = 9
+volume = 15
+lot = 1
+[.karils_crossbow]
+sector = "barrows"
+volatility = 9
+volume = 15
+lot = 1
+[.torags_hammers]
+sector = "barrows"
+volatility = 9
+volume = 12
+lot = 1
+
+# --- jewellery ---
+[.amulet_of_fury]
+sector = "jewellery"
+volatility = 9
+volume = 30
+lot = 1
+[.amulet_of_glory_4]
+sector = "jewellery"
+volume = 200
+lot = 5
+[.berserker_ring]
+sector = "jewellery"
+volatility = 10
+volume = 20
+lot = 1
+[.warrior_ring]
+sector = "jewellery"
+volatility = 8
+volume = 30
+lot = 1
+[.archers_ring]
+sector = "jewellery"
+volatility = 9
+volume = 20
+lot = 1
+[.seers_ring]
+sector = "jewellery"
+volatility = 9
+volume = 20
+lot = 1
+[.ring_of_wealth]
+sector = "jewellery"
+volume = 100
+lot = 2
+
+# --- materials ---
+[.feather]
+sector = "materials"
+volatility = 4
+volume = 8000
+lot = 1000
+[.flax]
+sector = "materials"
+volume = 3000
+lot = 500
+[.bowstring]
+sector = "materials"
+volume = 2500
+lot = 500
+[.vial_of_water]
+sector = "materials"
+volatility = 4
+volume = 3000
+lot = 500
+[.vial]
+sector = "materials"
+volatility = 4
+volume = 1500
+lot = 500
+[.empty_vial]
+sector = "materials"
+volatility = 4
+volume = 1500
+lot = 500
+[.seaweed]
+sector = "materials"
+volume = 800
+lot = 100
+[.soda_ash]
+sector = "materials"
+volume = 600
+lot = 100
+[.molten_glass]
+sector = "materials"
+volume = 900
+lot = 100
+
+# --- summoning ---
+[.spirit_shards]
+sector = "summoning"
+volatility = 3
+volume = 20000
+lot = 5000
+[.pouch]
+sector = "summoning"
+volatility = 3
+volume = 3000
+lot = 500
+[.gold_charm]
+sector = "summoning"
+volume = 800
+lot = 100
+[.green_charm]
+sector = "summoning"
+volume = 800
+lot = 100
+[.crimson_charm]
+sector = "summoning"
+volatility = 8
+volume = 900
+lot = 100
+[.blue_charm]
+sector = "summoning"
+volatility = 10
+volume = 300
+lot = 25
+
+# --- rares (lot 1, priced in the hundreds of millions; the model clamps them) ---
+[.santa_hat]
+sector = "rares"
+volatility = 6
+volume = 3
+lot = 1
+[.blue_partyhat]
+sector = "rares"
+volatility = 5
+volume = 1
+lot = 1
+[.red_partyhat]
+sector = "rares"
+volatility = 5
+volume = 1
+lot = 1
+[.green_partyhat]
+sector = "rares"
+volatility = 5
+volume = 1
+lot = 1
+[.white_partyhat]
+sector = "rares"
+volatility = 5
+volume = 1
+lot = 1
+[.purple_partyhat]
+sector = "rares"
+volatility = 5
+volume = 1
+lot = 1
+[.yellow_partyhat]
+sector = "rares"
+volatility = 5
+volume = 1
+lot = 1
+
+# ---------------------------------------------------------------------------------------------
+# Campaigns - the manipulation plays.
+#
+#   weight       relative chance of being picked
+#   duration     ticks the play runs for (600ms each; 3000 = 30 minutes)
+#   move         percent the price is pushed over the duration, in `direction`
+#   direction    1 up, -1 down, 0 sideways (the move is used as extra jitter instead)
+#   volume       percent of normal volume printed while it runs (300 = three times)
+#   report       the line the market report shows; $item is the commodity, $sector its sector
+#   hints        what the traders say near the desk while it runs. Hint, never name it outright.
+# ---------------------------------------------------------------------------------------------
+[zidion_market_campaigns]
+row_id = "string"
+weight = "int"
+duration = "range"
+move = "range"
+direction = "int"
+volume = "int"
+report = "string"
+hints = "list<string>"
+
+[.pump]
+weight = 25
+duration = [3000, 7000]
+move = [20, 55]
+direction = 1
+volume = 300
+report = "Sustained buying in $item. Somebody is building a position."
+hints = [
+    "Someone has been buying every $item on the board for an hour now.",
+    "If you are holding $item, hold. Just hold.",
+    "Whoever is stacking $item has deeper pockets than the rest of us combined.",
+    "Watch the $sector board. Something is moving and it is not us.",
+    "Three of my $item asks got lifted before I could blink.",
+]
+
+[.dump]
+weight = 20
+duration = [2000, 5000]
+move = [15, 45]
+direction = -1
+volume = 300
+report = "Heavy selling in $item. The floor is soaking up stock."
+hints = [
+    "Big seller in $item. Bids are getting hit as fast as they go up.",
+    "I would not be buying $item today. Someone wants out badly.",
+    "The $sector board is red and it is one account doing it.",
+    "Somebody is unloading $item like it is on fire.",
+]
+
+[.squeeze]
+weight = 10
+duration = [1500, 3500]
+move = [50, 120]
+direction = 1
+volume = 500
+report = "A squeeze in $item - sellers have vanished and buyers are chasing."
+hints = [
+    "There is not a single $item ask left on the board. Not one.",
+    "Whoever shorted $item is about to have a very bad afternoon.",
+    "Buyers are chasing $item up. Nobody wants to be the one without.",
+]
+
+[.whale]
+weight = 15
+duration = [4000, 9000]
+move = [10, 25]
+direction = 1
+volume = 600
+report = "Whale activity in $item - enormous size trading through quietly."
+hints = [
+    "Some whale is quietly hoovering up $item. Quietly for now.",
+    "You know when a price does not move and volume triples? $item. Right now.",
+    "The clerks look nervous every time that one comes back for more $item.",
+    "Do not fight the big money on $item. Follow it or stay out.",
+]
+
+[.crash]
+weight = 10
+duration = [1000, 2500]
+move = [30, 65]
+direction = -1
+volume = 500
+report = "$item is crashing. Panic selling across the $sector board."
+hints = [
+    "$item just fell out of bed. Get out of the way.",
+    "Everybody is selling $item at once. Who started it?",
+    "This is what a crash looks like. Remember $item today.",
+    "I have never seen the $sector board this red.",
+]
+
+[.rumour]
+weight = 10
+duration = [1500, 4000]
+move = [5, 15]
+direction = 0
+volume = 200
+report = "Rumours around $item. Prices swinging on talk, not trades."
+hints = [
+    "Heard something about $item. Cannot say what. Cannot say who.",
+    "There is a rumour going round the desk about $item. Half of it is probably true.",
+    "Somebody knows something about $item and it is not me.",
+]
+
+[.quiet]
+weight = 10
+duration = [2000, 4000]
+move = [0, 0]
+direction = 0
+volume = 60
+report = "A quiet session. Prices drifting on thin volume."
+hints = [
+    "Dead quiet today. Even the whales are asleep.",
+    "Nothing moving. Good day to stock up before the next play.",
+]
+
+# ---------------------------------------------------------------------------------------------
+# Traders - the bots on the exchange floor. Row id is the account name they log in with.
+#
+#   style   maker   quotes bids and asks on the busiest commodities
+#           whale   runs the campaigns: lifts asks in a pump, dumps stock in a crash
+#           scalper takes player offers that sit inside the take band
+#           crier   talks the most, trades the least
+#   tile    where they stand in the Grand Exchange
+# ---------------------------------------------------------------------------------------------
+[zidion_market_traders]
+row_id = "string"
+style = "string"
+tile = "tile"
+
+[.Mercator]
+style = "whale"
+tile = { x = 3161, y = 3486 }
+[.Sable]
+style = "maker"
+tile = { x = 3168, y = 3486 }
+[.Bramwell]
+style = "maker"
+tile = { x = 3161, y = 3493 }
+[.Cassia]
+style = "scalper"
+tile = { x = 3168, y = 3493 }
+[.Oshun]
+style = "maker"
+tile = { x = 3159, y = 3489 }
+[.Gildroy]
+style = "scalper"
+tile = { x = 3170, y = 3490 }
+[.Piet]
+style = "crier"
+tile = { x = 3163, y = 3484 }
+[.Vorn]
+style = "crier"
+tile = { x = 3166, y = 3495 }
+
+# ---------------------------------------------------------------------------------------------
+# Rules - all the numbers.
+# ---------------------------------------------------------------------------------------------
+[zidion_market_rules]
+row_id = "string"
+value = "int"
+
+# Ticks between market steps (50 = 30 seconds). Every step moves prices and prints trades.
+[.step_ticks]
+value = 50
+
+# Per-step pull of a price back towards its base, in basis points of the gap. 10 = 0.1% per
+# step: a pump unwinds over about six hours once it stops, not in minutes.
+[.reversion_bps]
+value = 10
+
+# Scale of the random walk. 100 = a commodity with volatility N moves about N% over a day.
+[.noise_percent]
+value = 100
+
+# Hard cap on one step's move, in basis points (300 = 3%).
+[.max_step_bps]
+value = 300
+
+# Price bounds as a percent of the base guide price.
+[.floor_percent]
+value = 30
+[.ceiling_percent]
+value = 400
+
+# Percent of commodities that print a synthetic trade each step.
+[.print_percent]
+value = 40
+
+# How many campaigns can run at once, and the ticks between one ending and the next starting.
+[.campaigns]
+value = 2
+[.campaign_gap_ticks]
+value = 600
+
+# Ticks between trader passes. Each pass makes at most ONE new offer: the exchange samples
+# same-priced offers by age and throws if two were created in the same millisecond.
+[.pass_ticks]
+value = 4
+
+# Half-spread the makers quote around the market price, in basis points.
+[.spread_bps]
+value = 200
+
+# How far inside the market price a resting player offer may sit and still get taken.
+[.take_bps]
+value = 300
+
+# A quote further than this from the current price is cancelled and re-quoted.
+[.requote_bps]
+value = 600
+
+# Quote size in lots (see zidion_market_items.lot).
+[.quote_lots]
+value = 4
+
+# Most a single bid may lock up, as a percent of the treasury balance. The house cannot go
+# all-in on one bid.
+[.max_escrow_percent]
+value = 3
+
+# Commodities the makers keep two-sided quotes on: the N busiest by turnover.
+[.quoted_items]
+value = 24
+
+# Hours of normal volume the house is seeded with, once, when the exchange has no history yet.
+[.seed_hours]
+value = 6
+
+# Coins the house is seeded with alongside that stock, as a percent of the stock's value, and
+# a hard ceiling on them. Rares are never seeded: they only reach the house when a player sells one.
+[.seed_coins_percent]
+value = 50
+[.seed_coins_max]
+value = 500000000
+
+# Chatter: chance per pass that a trader near a real player says something, and the ticks a
+# trader stays quiet after speaking.
+[.chat_percent]
+value = 70
+[.chat_cooldown_ticks]
+value = 12
+[.hint_percent]
+value = 60
+[.chat_radius]
+value = 12
+
+# Chance per pass that the whale acts a running campaign out in the book instead of quoting.
+[.play_percent]
+value = 50
+
+# Stale quotes pulled per pass (each cancel is processed by the exchange next tick).
+[.max_cancels]
+value = 2
+
+# Seeding caps: never more than this many of one item, and only a few of anything priced
+# above expensive_price (a godsword is a godsword).
+[.seed_max_items]
+value = 100000
+[.expensive_price]
+value = 1000000
+[.expensive_seed]
+value = 3
+
+# Idle life on the floor: chance per pass that one trader does something - wanders a few tiles
+# from its spot, plays an emote, or sits down to rest - and the radius it wanders within.
+[.idle_percent]
+value = 40
+[.wander_radius]
+value = 4
+
+# Chance per pass that two idle traders within banter_radius strike up a conversation.
+[.banter_percent]
+value = 45
+[.banter_radius]
+value = 8
+
+# Real trades move the price. Each fill shifts the commodity by this many basis points per one
+# hour of its normal volume traded (sells push down, buys push up), capped per fill.
+[.impact_bps_per_volume]
+value = 150
+[.impact_max_bps]
+value = 400
+
+# Board sizes.
+[.top_items]
+value = 100
+[.report_movers]
+value = 5
+
+# ---------------------------------------------------------------------------------------------
+# Idle chatter.
+# ---------------------------------------------------------------------------------------------
+[zidion_market_lines]
+row_id = "string"
+lines = "list<string>"
+
+[.idle]
+lines = [
+    "Buy low, sell high. Simple. Nobody does it.",
+    "The clerks see everything. The clerks say nothing.",
+    "Anyone selling coal? No? Nobody ever is when I need it.",
+    "I made eight million on runes last week and lost nine on herbs.",
+    "Never chase. The board always comes back to you.",
+    "Volume first, price second. Price lies. Volume does not.",
+    "Every whale started as a minnow with a plan.",
+    "You want a tip? Watch who is standing at the desk longest.",
+    "Half this floor is bots. The other half is worse.",
+    "Check the Top 100 before you sell anything. Then check it again.",
+]
+
+[.greeting]
+lines = [
+    "Here to trade or here to watch?",
+    "New face. Buying or selling?",
+    "Talk to the clerk if you want the report. Talk to me if you want the truth.",
+]
+
+# ---------------------------------------------------------------------------------------------
+# The market clerk. clerk_menu is the five options in order: report, top 100, boards, trade,
+# explain (a choice box holds five at most). clerk_explain is one chat box per line.
+# ---------------------------------------------------------------------------------------------
+[.clerk_welcome]
+lines = ["Welcome to the Zidion market desk. Prices, plays and the Top 100 - what do you need?"]
+
+[.clerk_menu]
+lines = [
+    "Show me the market report.",
+    "Show me the Top 100.",
+    "What are the commodity prices?",
+    "I would like to trade.",
+    "How does this market work?",
+]
+
+[.clerk_boards]
+lines = ["Which board?"]
+
+[.clerk_explain]
+lines = [
+    "Every commodity on the board has a live price. It drifts on its own, and it moves hard when somebody big decides it should.",
+    "The traders on the floor quote bids and asks into the exchange. Sell into a bid and you are paid on the spot; buy from an ask and the stock is yours.",
+    "The report tells you what is being played right now. The Top 100 tells you where the money is going. The rest is up to you.",
+    "And the exchange takes its cut on every sale. Where that goes is the house's business.",
+]
+
+[.clerk_quiet]
+lines = ["A quiet session. Prices drifting on thin volume."]
+
+# Emote animation ids (data/entity/player/modal/tab/emote/emotes.anims.toml) the traders play
+# when they are idle.
+[.emotes]
+lines = [
+    "emote_think",
+    "emote_shrug",
+    "emote_yawn",
+    "emote_clap",
+    "emote_cheer",
+    "emote_laugh",
+    "emote_dance",
+    "emote_headbang",
+    "emote_jig",
+    "emote_wave",
+]
+
+# ---------------------------------------------------------------------------------------------
+# Banter between two traders: A says `first`, B answers `reply`, A may `retort` (blank = none).
+# $item and $sector are filled from a running campaign when there is one.
+# ---------------------------------------------------------------------------------------------
+[zidion_market_banter]
+row_id = "string"
+first = "string"
+reply = "string"
+retort = "string"
+
+[.tip]
+first = "You holding any $item?"
+reply = "Not since this morning. Why, what have you heard?"
+retort = "Nothing. Nothing at all."
+
+[.whale]
+first = "Someone dropped forty million on $item before I had my breakfast."
+reply = "Forty? I heard sixty."
+retort = "Either way, I am not selling."
+
+[.crash]
+first = "Did you see the $sector board?"
+reply = "I saw it. I am trying not to look at it again."
+retort = ""
+
+[.rumour]
+first = "There is a rumour going round about $item."
+reply = "There is always a rumour going round about something."
+retort = "This one has a name attached."
+
+[.lunch]
+first = "Fancy a walk to the bank?"
+reply = "Cannot. I have got bids resting."
+retort = ""
+
+[.weather]
+first = "Quiet one today."
+reply = "Quiet is when they get you."
+retort = ""
+
+[.knights]
+first = "Knights were busy on the north road again."
+reply = "Good. Keeps the robbers honest."
+retort = "Honest enough to pay them, you mean."
+
+[.newbie]
+first = "New face at the desk earlier. Sold everything at market."
+reply = "They will learn. Or they will not."
+retort = ""
+
+[.brag]
+first = "Doubled my money on runes last week."
+reply = "And lost it on herbs, I heard."
+retort = "Who told you that."
+
+[.tax]
+first = "Two percent on every sale. Where does it all go?"
+reply = "The house. Where else."
+retort = ""

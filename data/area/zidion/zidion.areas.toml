@@ -1,0 +1,30 @@
+# Zidion areas.
+#
+# The whole surface is player-vs-player: content/zidion/ZidionWorld.kt flags `in_pvp` on every
+# player who is not standing in one of the areas below (it does not widen the shipped
+# [wilderness] area - see that script for why). These are the only places the flag is cleared.
+#
+# `safe_zone` is a shipped tag, not a new concept - Clan Wars already uses it, and
+# content/area/misthalin/edgeville/Wilderness.kt reads it directly:
+#     inWilderness(tile) = tile in wilderness && safeZones.none { tile in it.area }
+# Zidion content reads the same tag: ZidionWorld clears `in_pvp` here, ZidionKnights does not
+# police killings here, and ZidionPvpBots loiters here instead of hunting.
+#
+# WARNING: `safe_zone` governs PLAYER combat only. It is NOT consulted by npc aggression -
+# content/entity/npc/combat/Aggression.kt hardcodes its only bail-out to Areas["lumbridge"].
+# So never give an npc standing in one of these `hunt_mode = "aggressive"`.
+#
+# PvP bots and their knight escorts are not seeded from any area: ZidionPvpBots spawns them just
+# out of view of whoever is online and removes the ones nobody is near.
+
+# Lumbridge Castle. No `level` so it covers the courtyard, both floors and the roof bank.
+[zidion_safe_lumbridge_castle]
+x = [3204, 3232]
+y = [3204, 3232]
+tags = ["safe_zone"]
+
+# The Grand Exchange compound, matching the shipped [grand_exchange] bounds exactly.
+[zidion_safe_grand_exchange]
+x = [3145, 3189]
+y = [3469, 3513]
+tags = ["safe_zone"]

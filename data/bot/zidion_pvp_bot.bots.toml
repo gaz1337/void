@@ -1,0 +1,29 @@
+# The Zidion PvP bot's activities - one per loadout, all the same bot.
+#
+# Each row points a template from zidion_pvp_bot.templates.toml at a set of fields. `fields` is
+# substituted into every "$name" in the template at load time. Which loadout a spawned bot gets
+# is drawn from the zidion_pvp_bot_loadouts table (data/entity/npc/humanoid/zidion_pvp_bot/),
+# whose row ids MUST be the activity ids below; content/zidion/ZidionPvpBots.kt pins each bot to
+# the one it drew. There is no area field: bots are spawned beside real players wherever those
+# players are, and fight wherever `in_pvp` holds (everywhere but the safe zones).
+#
+# NOTE: white knights are NPCs, not player bots - see data/entity/npc/humanoid/zidion_knight/.
+# Only the PvP bots are players.
+
+[zidion_pvp_bot_melee]
+template = "zidion_pvp_bot_melee"
+capacity = 40
+timeout = 500
+fields = { style = "style2" }
+
+[zidion_pvp_bot_ranged]
+template = "zidion_pvp_bot_ranged"
+capacity = 40
+timeout = 500
+fields = { style = "style2" }
+
+[zidion_pvp_bot_mage]
+template = "zidion_pvp_bot_mage"
+capacity = 40
+timeout = 500
+fields = { style = "style1" }

@@ -1,0 +1,4 @@
+# Same tile and facing the blonde clerk had in grand_exchange.npc-spawns.toml.
+spawns = [
+  { id = "zidion_market_clerk", x = 3165, y = 3488, direction = "SOUTH" },
+]

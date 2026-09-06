@@ -1,0 +1,12 @@
+# Combat behaviour for Zidion White Knights.
+#
+# Same shape as humanoid/dwarf/dwarf.combat.toml: clone the parent, override the one thing that
+# differs. `white_knight` already declares the 2h animations and human death sound, so all this
+# adds is the hit - one swing ends anything on the roads, PvP bot or player.
+
+[zidion_knight]
+clone = "white_knight"
+
+[zidion_knight.melee]
+clone = "white_knight.melee"
+target_hit = { offense = "slash", max = 990 }

@@ -204,7 +204,17 @@ class DungeonMap(
 
     fun startTile() = tile(start()).add(8, 8)
 
-    fun room(x: Int, y: Int): DungeonRoom? = grid[y * width + x]
+    fun room(x: Int, y: Int): DungeonRoom? {
+        // A door interaction can resolve to a room coordinate outside the grid (a door tile that
+        // does not belong to this dungeon's instance), which indexed the backing array out of
+        // bounds and threw for the whole tick. The function is already nullable and every caller
+        // handles null, so an off-grid lookup is simply "no room" - the door click no-ops instead
+        // of crashing. (Upstream bug: DungeonDoors.openDoor, ArrayIndexOutOfBoundsException.)
+        if (x < 0 || y < 0 || x >= width || y >= height) {
+            return null
+        }
+        return grid[y * width + x]
+    }
 
     fun tile(room: DungeonRoom): Tile = region.tile.add(room.tile.x * 16, room.tile.y * 16)
 

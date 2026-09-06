@@ -1,0 +1,125 @@
+# Zidion White Knight behaviour.
+#
+# Everything the knights say and every number that governs them lives here, not in Kotlin
+# (wiki: "Data in files, logic in code"). Edit freely - the script reads these by name and has no
+# opinion about how many lines are in a list.
+#
+# Format is the standard Data-Tables one: the header block declares column types, then rows are
+# added with the `.` prefix. Read back as Tables.stringList("zidion_knight_lines.murder.lines")
+# and Tables.int("zidion_knight_rules.forgive_percent.value").
+
+[zidion_knight_lines]
+row_id = "string"
+lines = "list<string>"
+
+# Shouted on arrival at a killing. The knights tolerate robbery; they do not tolerate murder.
+[.murder]
+lines = [
+    "I told you to only get their valuables, not kill them!",
+    "Robbery is business. This is murder.",
+    "That was not the arrangement.",
+    "You went too far. Again.",
+]
+
+# The offender begging once the knight engages.
+[.plead]
+lines = [
+    "Boss, wait - I can explain!",
+    "It was an accident, boss!",
+    "Mercy! I'll bring you double next time!",
+    "Please, boss, don't do this.",
+]
+
+# Knight decides to let them live.
+[.forgive]
+lines = [
+    "Get out of my sight. Next time I finish it.",
+    "Consider this a warning. Your last one.",
+    "You're lucky I'm in a good mood.",
+]
+
+# Knight decides otherwise.
+[.execute]
+lines = [
+    "Then you're no use to me.",
+    "I gave you a warning. You spent it.",
+    "The roads will be cleaner without you.",
+]
+
+# PvP bot handing over what it took.
+[.tribute]
+lines = [
+    "Here you go, boss.",
+    "Your cut, boss.",
+    "Took it clean. All yours.",
+]
+
+# Knight accepting tribute.
+[.tribute_reply]
+lines = [
+    "That's what I thought.",
+    "Good. Keep it that way.",
+    "See? Everyone goes home happy.",
+]
+
+[zidion_knight_rules]
+row_id = "string"
+value = "int"
+
+# Percent chance a killing draws a knight at all. Below 100 the world feels policed rather
+# than surveilled - some crimes go unanswered.
+# Ticks a player stays wanted after attacking or killing another player on the roads. Any
+# knight that spots a wanted player within its hunt_range goes for them (zidion_law hunt mode).
+[.wanted_ticks]
+value = 100
+
+# Chance an attack alone makes the attacker wanted (a kill uses response_percent). Attacking a
+# real player is always noticed; bot-on-bot fights are left to run until somebody dies. The
+# knights treat both the same once they are wanted - bots are players to them.
+[.attack_wanted_percent]
+value = 100
+[.attack_wanted_bot_percent]
+value = 0
+
+[.response_percent]
+value = 70
+
+# Percent chance the knight spares the offender when judgement lands.
+[.forgive_percent]
+value = 50
+
+# Ticks between the knight engaging and passing judgement (~30s at 600ms/tick).
+[.judgement_ticks]
+value = 50
+
+# Ticks a summoned knight exists before despawning on its own (~3min).
+[.lifetime_ticks]
+value = 300
+
+
+
+# Ticks between the accusation and the accused pleading.
+[.plead_delay_ticks]
+value = 4
+
+# The execution scene, shown to a real player killed by a PvP bot. Ticks after the death before
+# the scene starts (the death sequence itself takes 5), how long the killer is held before the
+# knight arrives, camera heights, and how long the victim watches the dust settle.
+[.execution_delay_ticks]
+value = 7
+# Ticks after the fall before the victim's screen goes dark and the killer is pulled off the
+# body into the scene. The shipped death queue teleports the victim at tick 5, so keep this
+# below it: the death animation shows, the teleport does not.
+[.fade_ticks]
+value = 3
+[.execution_hold_ticks]
+value = 60
+[.camera_height]
+value = 520
+[.camera_focus_height]
+value = 90
+# Ticks the knight is given to walk in while the camera tracks the killer.
+[.approach_ticks]
+value = 5
+[.execution_linger_ticks]
+value = 6

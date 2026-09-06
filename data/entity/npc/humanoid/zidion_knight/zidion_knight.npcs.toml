@@ -1,0 +1,51 @@
+# Zidion White Knights.
+#
+# Built the way every other npc family in Void is built: clone an existing definition and
+# override only what differs (see humanoid/dwarf and humanoid/human for the pattern).
+# `clone` resolves forward references, so cloning `white_knight` from falador.npcs.toml is safe
+# regardless of file load order.
+#
+# Cache ids 3348/3349/3350 are unused White Knight models (verified against a cache name dump;
+# 4771 and 12295 are also free if more variants are wanted). Falador's own `white_knight` (id 19)
+# and its 35 spawns are left completely untouched.
+#
+# Every key that NPCDefinitions does not special-case (only id/clone/categories/drop_table are)
+# goes through Params.id(key) and MUST be a name Params.kt (cache module) already knows - an
+# unknown key aborts the whole npc load. So no custom `zidion_*` keys here: Zidion content
+# recognises these knights by id prefix (`zidion_knight*`) and by the `zidion_knight` category.
+
+[zidion_knight]
+id = 3348
+clone = "white_knight"
+# God tier, by design: nothing on the roads is meant to survive one. Corporeal Beast is 20000 hp
+# and 320 in the combat stats; these sit above it.
+hitpoints = 20000
+att = 500
+str = 500
+def = 500
+attack_bonus = 500
+combat_def = "zidion_knight"
+drop_table = "white_knight"
+respawn_delay = 50
+# Their own hunt mode (zidion_law in data/entity/npc/hunt_modes.toml - only that one file is
+# loaded), NOT the shipped "aggressive": that one is
+# handled by Aggression.kt for every npc and would have a knight attack anyone who walked past.
+# ZidionKnights handles zidion_law and only engages players carrying the `zidion_wanted` clock -
+# whoever attacked or killed a player on the roads - so a knight standing in the Grand Exchange
+# is harmless and a knight beside a robbery is not.
+hunt_mode = "zidion_law"
+hunt_range = 12
+#
+# Wander/leash distances are NOT npc keys: Wander.kt and CombatMovement.kt read the `npc_ranges`
+# table. The knights have rows in data/entity/npc/wander_ranges.tables.toml (wander 3, leash 64):
+# a knight sent to a killing from out of view must be able to reach it.
+categories = ["human", "zidion_knight"]
+examine = "He keeps order on the roads, and takes his cut. Do not test him."
+
+[zidion_knight_2]
+id = 3349
+clone = "zidion_knight"
+
+[zidion_knight_3]
+id = 3350
+clone = "zidion_knight"

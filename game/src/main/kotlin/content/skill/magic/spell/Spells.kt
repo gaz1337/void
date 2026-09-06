@@ -20,7 +20,9 @@ class Spells : Script {
             if (!target.inMultiCombat) {
                 return@combatAttack
             }
-            if (spell.endsWith("_burst") || spell.endsWith("_barrage")) {
+            // Zidion fix (upstream bug): a splash carries damage -1, and nextInt(0..-1) throws
+            // inside the game loop. A splashed burst or barrage simply hits nobody else.
+            if (damage >= 0 && (spell.endsWith("_burst") || spell.endsWith("_barrage"))) {
                 val targets = multiTargets(this, target, 9)
                 for (targ in targets) {
                     targ.directHit(this, random.nextInt(0..damage), type, weapon, spell)

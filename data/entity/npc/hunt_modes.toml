@@ -157,3 +157,14 @@ id = "swamp_lizard,orange_salamander,red_salamander,black_salamander"
 check_visual = "line_of_sight"
 check_not_busy = true
 find_keep_hunting = true
+# Zidion white knights (content/zidion/ZidionKnights.kt). Only one hunt_modes file is loaded
+# (files.find), so the mode has to live here. The knight handler ignores anyone without the
+# zidion_wanted clock, so this only ever ends up on someone who attacked or killed a player.
+[zidion_law]
+type = "player"
+check_visual = "line_of_sight"
+check_not_too_strong = false
+check_not_combat = false
+check_not_combat_self = true
+check_not_busy = false
+check_afk = false

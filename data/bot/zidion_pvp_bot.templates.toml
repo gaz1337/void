@@ -1,0 +1,199 @@
+# The Zidion PvP bot - three loadouts, one bot.
+#
+# These are ordinary Void bot templates (see wiki: bots / bot-architecture), the same shape as the
+# shipped pvp_dangerous_* templates in minigame_combat.templates.toml. Every "$name" is filled
+# from the activity's `fields` in zidion_pvp_bot.bots.toml at load time.
+#
+# Levels are set by content/zidion/ZidionPvpBots.kt (combat_level / prayer_level rules); gear and
+# inventory live here so a loadout change never touches code. There is deliberately no area: the
+# bots are spawned beside real players wherever those players are, and whether they may fight is
+# the `in_pvp` variable that content/zidion/ZidionWorld.kt keeps true everywhere but the safe
+# zones - the same flag Target.attackable consults.
+#
+# The fight action pauses (succeeds, then the restart waits) while any of these hold, all of
+# them raised by ZidionPvpBots:
+#   in_pvp == false    off duty in a safe zone, loitering
+#   zidion_tribute     walking loot over to a white knight
+#   zidion_hold        sizing a victim up, waiting for a drop, or having just let someone go
+#   zidion_loot        collecting a pile
+# `zidion_retire` is never set, so the activity lives as long as the bot does.
+#
+# No `floor_item` action: it takes the first thing it finds, bones included. Loot is ranked by
+# value in the script instead.
+
+# ---------------------------------------------------------------------------------------------
+# Melee: whip + defender, bandos, claws for the spec.
+# ---------------------------------------------------------------------------------------------
+[zidion_pvp_bot_melee]
+setup = [
+    { equipment = { weapon = { id = "abyssal_whip" }, shield = { id = "dragon_defender" }, chest = { id = "bandos_chestplate" }, legs = { id = "bandos_tassets" }, hat = { id = "helm_of_neitiznot" }, feet = { id = "dragon_boots" }, amulet = { id = "amulet_of_fury" }, cape = { id = "fire_cape" }, ring = { id = "berserker_ring" } } },
+    { inventory = [
+        { id = "dragon_claws", min = 1 },
+        { id = "super_attack_4", min = 1 },
+        { id = "super_strength_4", min = 1 },
+        { id = "super_restore_4", min = 2 },
+        { id = "saradomin_brew_4", min = 2 },
+        { id = "shark", min = 16 },
+    ] },
+]
+actions = [
+    { interface = { option = "Select", id = "combat_styles:$style" } },
+    { player = {
+        option        = "Attack",
+        radius        = 12,
+        delay         = 1,
+        loot_strategy = "wealth",
+        success       = { any = [
+            { variable = { id = "in_pvp",         equals = false, default = false } },
+            { variable = { id = "zidion_tribute", equals = true,  default = false } },
+            { clock    = { id = "zidion_hold", min = 1 } },
+            { clock    = { id = "zidion_loot", min = 1 } },
+        ] },
+    } },
+    { restart = {
+        wait_if = [
+            { variable = { id = "in_pvp",         equals = false, default = false } },
+            { variable = { id = "zidion_tribute", equals = true,  default = false } },
+            { clock    = { id = "zidion_hold", min = 1 } },
+            { clock    = { id = "zidion_loot", min = 1 } },
+        ],
+        success = { variable = { id = "zidion_retire", equals = true, default = false } },
+    } },
+]
+reactive = [
+    { eat = { heal_percent = 45 } },
+    { pray = { id = "deflect_melee",    if = { attacker_style = { equals = "melee" } } } },
+    { pray = { id = "deflect_missiles", if = { attacker_style = { equals = "ranged" } } } },
+    { pray = { id = "deflect_magic",    if = { attacker_style = { equals = "magic" } } } },
+    { pray = { id = "turmoil", if = { variable = { id = "in_pvp", equals = true, default = false } } } },
+    { spec_attack = { weapon = "dragon_claws", fallback = "abyssal_whip", min_energy = 500, if = { target_hp_percent = { max = 0.45 } } } },
+    { drink_potion = { item = "super_attack_*",   skill = "attack",   if = { clock = { id = "fight_starting" } } } },
+    { drink_potion = { item = "super_strength_*", skill = "strength", if = { clock = { id = "fight_starting" } } } },
+    { drink_potion = { item = "super_restore_*",  skill = "prayer" } },
+    { drink_potion = { item = "saradomin_brew_*", skill = "constitution", if = { skill_percent = { id = "constitution", max_percent = 35 } } } },
+]
+produces = [
+    { skill = "attack" },
+    { skill = "strength" },
+    { skill = "defence" },
+    { skill = "constitution" },
+    { skill = "prayer" },
+]
+
+# ---------------------------------------------------------------------------------------------
+# Ranged: magic shortbow, black dragonhide, arrows for days.
+# ---------------------------------------------------------------------------------------------
+[zidion_pvp_bot_ranged]
+setup = [
+    { equipment = { weapon = { id = "magic_shortbow" }, chest = { id = "black_dragonhide_body" }, legs = { id = "black_dragonhide_chaps" }, hat = { id = "archer_helm" }, feet = { id = "snakeskin_boots" }, hands = { id = "black_dragonhide_vambraces" }, ammo = { id = "rune_arrow", min = 10000 }, amulet = { id = "amulet_of_fury" }, cape = { id = "avas_accumulator" }, ring = { id = "archers_ring" } } },
+    { inventory = [
+        { id = "super_ranging_potion_4", min = 2 },
+        { id = "super_restore_4", min = 2 },
+        { id = "saradomin_brew_4", min = 2 },
+        { id = "rune_arrow", min = 10000 },
+        { id = "shark", min = 16 },
+    ] },
+]
+actions = [
+    { interface = { option = "Select", id = "combat_styles:$style" } },
+    { player = {
+        option        = "Attack",
+        radius        = 12,
+        delay         = 1,
+        loot_strategy = "wealth",
+        success       = { any = [
+            { variable = { id = "in_pvp",         equals = false, default = false } },
+            { variable = { id = "zidion_tribute", equals = true,  default = false } },
+            { clock    = { id = "zidion_hold", min = 1 } },
+            { clock    = { id = "zidion_loot", min = 1 } },
+        ] },
+    } },
+    { restart = {
+        wait_if = [
+            { variable = { id = "in_pvp",         equals = false, default = false } },
+            { variable = { id = "zidion_tribute", equals = true,  default = false } },
+            { clock    = { id = "zidion_hold", min = 1 } },
+            { clock    = { id = "zidion_loot", min = 1 } },
+        ],
+        success = { variable = { id = "zidion_retire", equals = true, default = false } },
+    } },
+]
+reactive = [
+    { eat = { heal_percent = 45 } },
+    { pray = { id = "deflect_melee",    if = { attacker_style = { equals = "melee" } } } },
+    { pray = { id = "deflect_missiles", if = { attacker_style = { equals = "ranged" } } } },
+    { pray = { id = "deflect_magic",    if = { attacker_style = { equals = "magic" } } } },
+    { pray = { id = "berserker", if = { variable = { id = "in_pvp", equals = true, default = false } } } },
+    { pray = { id = "leech_ranged", if = { variable = { id = "in_pvp", equals = true, default = false } } } },
+    { spec_attack = { weapon = "magic_shortbow", fallback = "magic_shortbow", min_energy = 500, if = { target_hp_percent = { max = 0.3 } } } },
+    { drink_potion = { item = "super_ranging_potion_*", skill = "ranged", if = { any = [{ clock = { id = "fight_starting" } }, { target_hp_percent = { max = 0.25 } }] } } },
+    { drink_potion = { item = "super_restore_*", skill = "prayer" } },
+    { drink_potion = { item = "super_restore_*", skill = "ranged", if = { skill_percent = { id = "ranged", max_percent = 30 } } } },
+    { drink_potion = { item = "saradomin_brew_*", skill = "constitution", if = { skill_percent = { id = "constitution", max_percent = 35 } } } },
+]
+produces = [
+    { skill = "ranged" },
+    { skill = "defence" },
+    { skill = "constitution" },
+    { skill = "prayer" },
+]
+
+# ---------------------------------------------------------------------------------------------
+# Mage: ancient staff, ahrims, ice spells and kiting.
+# ---------------------------------------------------------------------------------------------
+[zidion_pvp_bot_mage]
+setup = [
+    { equipment = { weapon = { id = "ancient_staff" }, shield = { id = "zamoraks_book_of_chaos" }, chest = { id = "ahrims_robe_top" }, legs = { id = "ahrims_robe_skirt" }, hat = { id = "ahrims_hood" }, feet = { id = "infinity_boots" }, hands = { id = "mystic_gloves_blue" }, amulet = { id = "amulet_of_fury" }, cape = { id = "saradomin_cape" }, ring = { id = "seers_ring" } } },
+    { inventory = [
+        { id = "super_magic_potion_4", min = 2 },
+        { id = "super_restore_4", min = 2 },
+        { id = "saradomin_brew_4", min = 2 },
+        { id = "blood_rune", min = 2500 },
+        { id = "death_rune", min = 2500 },
+        { id = "water_rune", min = 10000 },
+        { id = "chaos_rune", min = 2500 },
+        { id = "air_rune", min = 10000 },
+        { id = "shark", min = 14 },
+    ] },
+]
+actions = [
+    { cast_spell = {
+        family  = "ice",
+        radius  = 12,
+        delay   = 1,
+        kite    = true,
+        success = { any = [
+            { variable = { id = "in_pvp",         equals = false, default = false } },
+            { variable = { id = "zidion_tribute", equals = true,  default = false } },
+            { clock    = { id = "zidion_hold", min = 1 } },
+            { clock    = { id = "zidion_loot", min = 1 } },
+        ] },
+    } },
+    { restart = {
+        wait_if = [
+            { variable = { id = "in_pvp",         equals = false, default = false } },
+            { variable = { id = "zidion_tribute", equals = true,  default = false } },
+            { clock    = { id = "zidion_hold", min = 1 } },
+            { clock    = { id = "zidion_loot", min = 1 } },
+        ],
+        success = { variable = { id = "zidion_retire", equals = true, default = false } },
+    } },
+]
+reactive = [
+    { eat = { heal_percent = 45 } },
+    { pray = { id = "deflect_melee",    if = { attacker_style = { equals = "melee" } } } },
+    { pray = { id = "deflect_missiles", if = { attacker_style = { equals = "ranged" } } } },
+    { pray = { id = "deflect_magic",    if = { attacker_style = { equals = "magic" } } } },
+    { pray = { id = "berserker", if = { variable = { id = "in_pvp", equals = true, default = false } } } },
+    { pray = { id = "leech_magic", if = { variable = { id = "in_pvp", equals = true, default = false } } } },
+    { drink_potion = { item = "super_magic_potion_*", skill = "magic", if = { clock = { id = "fight_starting" } } } },
+    { drink_potion = { item = "super_restore_*", skill = "prayer" } },
+    { drink_potion = { item = "super_restore_*", skill = "magic", if = { skill_percent = { id = "magic", max_percent = 30 } } } },
+    { drink_potion = { item = "saradomin_brew_*", skill = "constitution", if = { skill_percent = { id = "constitution", max_percent = 35 } } } },
+]
+produces = [
+    { skill = "magic" },
+    { skill = "defence" },
+    { skill = "constitution" },
+    { skill = "prayer" },
+]

@@ -1,0 +1,441 @@
+# The Zidion Jubilee - the Grand Exchange festival.
+#
+# Every number the festival reads and every line the host says lives here (wiki: "Data in files,
+# logic in code"). content/zidion/ZidionFestival.kt reads these by name. Format is the standard
+# Data-Tables one: a header block declares column types, then rows are added with the `.` prefix.
+#
+# Read back as e.g. Tables.int("zidion_jubilee_rules.jackpot_percent.value")
+#                    Tables.stringList("zidion_jubilee_lines.welcome.lines")
+#                    Tables.getOrNull("zidion_jubilee_rewards")?.rows()
+#                    Tables.getOrNull("zidion_jubilee_decor")?.rows()
+
+# =================================================================================================
+# Rules - every dial. Tune live, no rebuild.
+# =================================================================================================
+[zidion_jubilee_rules]
+value = "int"
+
+# How often the Grand Draw fires (ticks). 100 ticks = 1 minute. ~3h would be 18000; kept short so
+# the event is lively and the finale is seen often. Raise for a calmer cadence.
+[.draw_interval_ticks]
+value = 500
+# The countdown broadcast, in ticks before the draw, so a crowd gathers.
+[.countdown_ticks]
+value = 30
+# The jackpot is this percent of the treasury balance, floored and capped so the bank is never
+# drained and never pays nothing.
+[.jackpot_percent]
+value = 5
+[.jackpot_min]
+value = 250000
+[.jackpot_max]
+value = 25000000
+
+# --- Guess the Price (the market mini-game) ---
+# Guess within `close_percent` of the live price for the big token payout; within `near_percent`
+# for a partial; otherwise a consolation.
+[.guess_close_percent]
+value = 5
+[.guess_near_percent]
+value = 20
+[.guess_tokens_close]
+value = 40
+[.guess_tokens_near]
+value = 15
+[.guess_tokens_miss]
+value = 3
+
+# --- Lucky Coin Dip ---
+[.dip_cost_coins]
+value = 5000
+[.dip_tokens_min]
+value = 5
+[.dip_tokens_max]
+value = 25
+[.dip_jackpot_percent]
+value = 8
+[.dip_jackpot_tokens]
+value = 100
+
+# --- Anti-farm ---
+# Per-stall cooldown so a stall can't be spammed, and a soft daily token cap per account.
+[.stall_cooldown_ticks]
+value = 4
+[.token_daily_cap]
+value = 3000
+
+# --- Treasure Dig ---
+[.dig_tokens_min]
+value = 8
+[.dig_tokens_max]
+value = 30
+[.dig_trinket_percent]
+value = 15
+
+# --- Light the Bonfire ---
+[.bonfire_tokens]
+value = 12
+
+# --- Fortune Teller ---
+[.fortune_tokens_min]
+value = 10
+[.fortune_tokens_max]
+value = 35
+
+# --- Test of Strength ---
+[.strength_tokens_max]
+value = 45
+
+# --- Ring Toss ---
+[.ring_win_percent]
+value = 45
+[.ring_tokens_win]
+value = 40
+[.ring_tokens_miss]
+value = 5
+
+# --- Ambience (keeps the fair alive) ---
+# How often the ambience tick fires: fireworks, host hype, dancing. 12 ticks ~= 7s.
+[.ambience_ticks]
+value = 5
+# Chance per ambience tick the host shouts a hype line.
+[.announce_percent]
+value = 30
+# Chance per ambience tick the host and a keeper break into a dance.
+[.dance_percent]
+value = 45
+
+# =================================================================================================
+# Lines - what the host and the festival say. $tokens, $name, $amount, $item, $price are filled in.
+# =================================================================================================
+[zidion_jubilee_lines]
+row_id = "string"
+lines = "list<string>"
+
+[.welcome]
+lines = [
+    "Welcome to the Zidion Jubilee! The one day the bank throws open its doors!",
+    "Step right up! The Grand Exchange is a party today - drinks are on the treasury!",
+    "You made it! Knights and robbers under one roof and nobody's fighting. Miracle!",
+    "The Jubilee's on! Play the stalls, win the crowd, and don't miss the Grand Draw!",
+]
+[.explain]
+lines = [
+    "Work the stalls to earn Jubilee Tokens, then trade them with me for festival finery.",
+    "Guess prices, dip for luck, and stick around - the treasury runs a Grand Draw for coin!",
+    "It's simple: play, earn tokens, look fabulous. And pray your name's drawn at the finale.",
+]
+[.balance]
+lines = [
+    "You're holding $tokens Jubilee Tokens. Spend them well, they don't keep till next year!",
+    "$tokens tokens in your pocket. The good stuff costs, so keep playing!",
+]
+[.no_tokens]
+lines = [
+    "Not enough tokens for that one, friend. Back to the stalls!",
+    "You're a little short. Go win some more and come back.",
+]
+[.reward_done]
+lines = [
+    "A fine choice! Wear it with pride - you earned it at the Jubilee.",
+    "There you go! You'll be the talk of the Exchange.",
+]
+[.guess_intro]
+lines = [
+    "Quick! What's a $item going for on the market right now?",
+    "Test your trader's eye - guess the price of a $item!",
+]
+[.guess_close]
+lines = [
+    "Spot on! You've got the market in your bones. Big tokens for you!",
+    "Nearly exact! The traders should hire you. Here's your prize!",
+]
+[.guess_near]
+lines = [
+    "Close enough! Not bad at all. A few tokens for the effort.",
+    "In the right ballpark! Have some tokens.",
+]
+[.guess_miss]
+lines = [
+    "Way off! But everyone's a winner today - a consolation token for you.",
+    "Ha! Not even close. Here, don't go home empty-handed.",
+]
+[.dip_win]
+lines = [
+    "JACKPOT! The coin dip loves you today!",
+    "Lucky hand! The big pot is yours!",
+]
+[.dip_normal]
+lines = [
+    "A tidy handful of tokens from the dip!",
+    "The dip pays out - not the jackpot, but not bad!",
+]
+[.cooldown]
+lines = [
+    "Easy now! Give the stall a moment to reset.",
+    "One at a time, friend - come back in a tick.",
+]
+[.draw_soon]
+lines = [
+    "<col=ffcc00>The Grand Draw begins in moments - gather at the Grand Exchange!</col>",
+    "<col=ffcc00>Last call! The treasury's Grand Draw is about to begin!</col>",
+]
+[.draw_winner]
+lines = [
+    "<col=ffcc00>The Grand Draw crowns $name, who takes $amount coins from the treasury!</col>",
+    "<col=ffcc00>Fortune favours $name tonight - $amount coins from the vault!</col>",
+]
+[.draw_empty]
+lines = [
+    "<col=ffcc00>The Grand Draw finds no takers this round. Play the stalls to enter!</col>",
+]
+[.dig_hit]
+lines = [
+    "Your spade strikes something - festival tokens buried in the sand!",
+    "Dig dig dig... treasure! Tokens for you!",
+    "The sand gives up its prize - tokens!",
+]
+[.dig_trinket]
+lines = [
+    "And a shiny trinket to boot! Lucky you!",
+    "Ooh, and a little something extra!",
+]
+[.bonfire]
+lines = [
+    "You stoke the Jubilee bonfire - it roars, and the crowd cheers! Have a token.",
+    "Another log on the fire! The sparks fly and the party glows. Token for you!",
+    "The bonfire blazes higher! Everyone loves a fire-tender. Token!",
+]
+[.announce]
+lines = [
+    "Roll up, roll up! The Jubilee only comes once a year!",
+    "Fresh tokens at every stall - who's feeling lucky?!",
+    "The treasury's Grand Draw pays REAL coin - are you in?!",
+    "Best party on the whole server, and YOU'RE invited!",
+    "Guess a price, dip for luck, dig for treasure - go go go!",
+    "The bonfire's roaring and the drinks are on the bank!",
+]
+[.fortune]
+lines = [
+    "The orb clears... I see Jubilee Tokens in your future!",
+    "Cross my palm... ah, fortune smiles on you today!",
+    "The spirits whisper of tokens - and they are never wrong!",
+]
+[.strength_hit]
+lines = [
+    "A solid swing! The puck climbs the tower - tokens for you!",
+    "Not bad! You've some muscle on you. Have some tokens.",
+]
+[.strength_bell]
+lines = [
+    "DING! You rang the bell! The crowd goes wild - big tokens!",
+    "A mighty blow! The bell sings! Maximum tokens!",
+]
+[.ring_win]
+lines = [
+    "Ring on the peg! A winner! Tokens all round!",
+    "Nice toss! Right over the peg - you win!",
+]
+[.ring_miss]
+lines = [
+    "So close! The ring bounces off. A consolation token for you.",
+    "Just missed! Here, try again - a token for your trouble.",
+]
+[.dance]
+lines = [
+    "Best party all year!",
+    "Woooo! Jubilee!",
+    "Free drinks at the bank, can you believe it?!",
+    "Dance with me!",
+    "One day of peace. Make it count!",
+]
+
+# =================================================================================================
+# Decorations - objects spawned around the Grand Exchange while the festival runs. Blocked tiles
+# are skipped, so nudge the coordinates if something doesn't appear. id must be a real object id.
+# =================================================================================================
+[zidion_jubilee_decor]
+row_id = "string"
+obj = "string"
+x = "int"
+y = "int"
+rotation = "int"
+
+# Fixed spread walkable tiles (probed) - a centre bonfire and banners around the ring.
+[.bonfire_centre]
+obj = "fire"
+x = 3165
+y = 3505
+rotation = 0
+[.banner_nw]
+obj = "gag_banner"
+x = 3155
+y = 3508
+rotation = 0
+[.banner_ne]
+obj = "gag_banner"
+x = 3174
+y = 3508
+rotation = 0
+[.banner_w]
+obj = "gag_banner"
+x = 3150
+y = 3487
+rotation = 0
+[.banner_e]
+obj = "gag_banner"
+x = 3181
+y = 3487
+rotation = 0
+[.banner_sw]
+obj = "gag_banner"
+x = 3158
+y = 3474
+rotation = 0
+[.banner_se]
+obj = "gag_banner"
+x = 3170
+y = 3474
+rotation = 0
+
+
+[zidion_jubilee_stalls]
+row_id = "string"
+game = "string"
+obj = "string"
+x = "int"
+y = "int"
+kx = "int"
+ky = "int"
+rotation = "int"
+
+# obj = the stall structure tile; kx/ky = the keeper's own tile (beside it, so it isn't standing
+# inside the stall). All verified-walkable and spread around the GE ring.
+[.guess]
+game = "guess"
+obj = "gem_stall"
+x = 3157
+y = 3506
+kx = 3157
+ky = 3505
+rotation = 0
+[.dip]
+game = "dip"
+obj = "general_stall"
+x = 3163
+y = 3507
+kx = 3163
+ky = 3506
+rotation = 0
+[.dig]
+game = "dig"
+obj = "silk_stall"
+x = 3169
+y = 3506
+kx = 3169
+ky = 3505
+rotation = 0
+[.fortune]
+game = "fortune"
+obj = "magic_stall"
+x = 3150
+y = 3491
+kx = 3152
+ky = 3491
+rotation = 0
+[.strength]
+game = "strength"
+obj = "scimitar_stall"
+x = 3180
+y = 3491
+kx = 3178
+ky = 3491
+rotation = 0
+[.ring]
+game = "ring"
+obj = "toy_stall"
+x = 3163
+y = 3474
+kx = 3163
+ky = 3475
+rotation = 0
+[.bonfire]
+game = "bonfire"
+obj = "fire"
+x = 3175
+y = 3506
+kx = 3175
+ky = 3505
+rotation = 0
+
+
+[zidion_jubilee_rewards]
+row_id = "string"
+item = "string"
+cost = "int"
+tier = "int"
+
+[.bunny_ears]
+item = "bunny_ears"
+cost = 50
+tier = 1
+[.green_mask]
+item = "green_hween_mask"
+cost = 150
+tier = 2
+[.red_mask]
+item = "red_hween_mask"
+cost = 150
+tier = 2
+[.festive_gloves]
+item = "santa_costume_gloves"
+cost = 120
+tier = 2
+[.festive_boots]
+item = "santa_costume_boots"
+cost = 120
+tier = 2
+[.festive_robes]
+item = "santa_costume_top"
+cost = 400
+tier = 3
+[.festive_legs]
+item = "santa_costume_legs"
+cost = 300
+tier = 3
+[.reindeer_hat]
+item = "reindeer_hat"
+cost = 500
+tier = 3
+[.bobble_hat]
+item = "bobble_hat"
+cost = 200
+tier = 2
+[.jester_scarf]
+item = "jester_scarf"
+cost = 180
+tier = 2
+[.tri_jester_scarf]
+item = "tri_jester_scarf"
+cost = 260
+tier = 2
+[.woolly_scarf]
+item = "woolly_scarf"
+cost = 150
+tier = 2
+[.yo_yo]
+item = "yo_yo"
+cost = 90
+tier = 1
+[.rubber_chicken]
+item = "rubber_chicken"
+cost = 120
+tier = 1
+[.snow_globe]
+item = "snow_globe"
+cost = 650
+tier = 4
+[.pumpkin_crown]
+item = "jack_lantern_mask"
+cost = 800
+tier = 4
